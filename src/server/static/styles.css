@@ -94,3 +94,7 @@ body {
 #results div:last-child {
     margin-bottom: 0;
 }
+
+.highlight {
+    background-color: yellow;
+} 
