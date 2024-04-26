@@ -6,10 +6,10 @@ import time
 from collections import deque
 import orjson
 
-def extract_data(section_data, items, episode, show, index_name):
+def extract_data(section_data, id, episode, show, index_name):
     return ({
             "_index": index_name,
-            "_id": items,
+            "_id": id,
             "_source": {
                 'transcript': section_data['transcript'], 
                 'confidence': section_data['confidence'], 
@@ -20,8 +20,24 @@ def extract_data(section_data, items, episode, show, index_name):
         }
     )
 
+def path_wo_ds_store(path):
+    dirs = os.listdir(path)[:]
+    dirs.remove('.DS_Store')
+    return dirs
+
+def generate_separate_data(episode_path, id, episode, show, index_name):
+    with open(episode_path, "rb") as f:
+        data = orjson.loads(f.read())
+
+        for section in data['results']:
+            section_data = section['alternatives'][0]
+            if section_data and 'transcript' in section_data:
+                yield extract_data(section_data, id, episode, show, index_name)
+                items += 1
+
 def generate_index_data(podcast_path, index_name):
     start = time.time()
+    delta_timer = time.time()
     items = 0
     reads = 0
 
@@ -30,16 +46,11 @@ def generate_index_data(podcast_path, index_name):
     #         continue
     dir = '0/'
     # letters = ['0/', '1/', '2/', '3/', '4/', '5/', '6/', '7/', '8/', '9/', 'A/', 'B/']
-    for letter in os.listdir(podcast_path + dir):
+    for letter in path_wo_ds_store(podcast_path + dir):
     # for letter in letters:
-        if letter == ".DS_Store":
-            continue
-        for show in os.listdir(podcast_path + dir + "/" + letter):
-            if show == ".DS_Store":
-                continue
-            for episode in os.listdir(podcast_path + dir + "/" + letter + "/" + show):
-                if episode == ".DS_Store":
-                    continue
+        for show in path_wo_ds_store(podcast_path + dir + "/" + letter):
+            for episode in path_wo_ds_store(podcast_path + dir + "/" + letter + "/" + show):
+
                 path = podcast_path + dir + "/" + letter + "/" + show + "/" + episode
                 reads += 1
 
@@ -54,11 +65,23 @@ def generate_index_data(podcast_path, index_name):
 
                 if reads % 1000 == 0:
                     end = time.time()
-                    print('took', end - start, 'seconds for', items, 'items', reads, 'reads')
-                    # raise StopIteration
+                    print(f'took {end - start} (delta {end - delta_timer}) seconds for {items} items and {reads} reads')
+                    delta_timer = time.time()
 
     print('finished in', time.time() - start, 'seconds')
     print('items', items)
+    raise StopIteration
+
+def generate_full_transcription_data(podcast_path, index_name):
+    with open(path, "rb") as f:
+        data = orjson.loads(f.read())
+
+        for section in data['results']:
+            section_data = section['alternatives'][0]
+            if section_data and 'transcript' in section_data:
+                yield extract_data(section_data, items, episode, show, index_name)
+                items += 1
+
 
 
 def main():
