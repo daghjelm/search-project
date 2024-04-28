@@ -25,14 +25,14 @@ def path_wo_ds_store(path):
     dirs.remove('.DS_Store')
     return dirs
 
-def generate_separate_data(episode_path, id, episode, show, index_name):
+def generate_separate_data(episode_path, items, episode, show, index_name):
     with open(episode_path, "rb") as f:
         data = orjson.loads(f.read())
 
         for section in data['results']:
             section_data = section['alternatives'][0]
             if section_data and 'transcript' in section_data:
-                yield extract_data(section_data, id, episode, show, index_name)
+                yield extract_data(section_data, items, episode, show, index_name)
                 items += 1
 
 def generate_index_data(podcast_path, index_name):
@@ -72,7 +72,8 @@ def generate_index_data(podcast_path, index_name):
     print('items', items)
     raise StopIteration
 
-def generate_full_transcription_data(podcast_path, index_name):
+def generate_full_transcription_data(path, index_name, episode, show):
+    items = 0
     with open(path, "rb") as f:
         data = orjson.loads(f.read())
 
