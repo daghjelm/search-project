@@ -79,6 +79,13 @@ if __name__ == "__main__":
 
     for hit in section_hits:
         print('hit:')
-        print(hit["_source"]["transcript"])
-        print('starts at', hit["_source"]["words"][0]['startTime'])
-        print('ends at', hit["_source"]["words"][-1]['endTime'])
+        print('transcript:', hit['_source']['transcript'])
+        print('score:', hit['_score'])
+    
+    # [{
+    #     'transcript': '..........',
+    #     'show': '',
+    #     'episode':'',
+    #     'start_time': 0,
+    #     'end_time': 0,
+    # }]

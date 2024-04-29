@@ -12,13 +12,15 @@ def extract_data(section_data, id, episode, show, index_name):
             "_id": id,
             "_source": {
                 'transcript': section_data['transcript'], 
-                'confidence': section_data['confidence'], 
-                'words'     : section_data['words'],
+                'start_time': section_data['words'][0]['startTime'],
+                'end_time': section_data['words'][-1]['endTime'],
                 'show'      : show,
                 'episode'   : episode
             }
         }
     )
+
+
 
 def path_wo_ds_store(path):
     dirs = os.listdir(path)[:]
@@ -35,7 +37,7 @@ def generate_separate_data(episode_path, items, episode, show, index_name):
                 yield extract_data(section_data, items, episode, show, index_name)
                 items += 1
 
-def generate_index_data(podcast_path, index_name):
+def generate_index_data(podcast_path, index_name, sections=True):
     start = time.time()
     delta_timer = time.time()
     items = 0
@@ -57,11 +59,19 @@ def generate_index_data(podcast_path, index_name):
                 with open(path, "rb") as f:
                     data = orjson.loads(f.read())
 
-                    for section in data['results']:
-                        section_data = section['alternatives'][0]
-                        if section_data and 'transcript' in section_data:
-                            yield extract_data(section_data, items, episode, show, index_name)
-                            items += 1
+                    if sections:
+                        for section in data['results']:
+                            section_data = section['alternatives'][0]
+                            if section_data and 'transcript' in section_data:
+                                yield extract_data(section_data, items, episode, show, index_name)
+                                items += 1
+                    else:
+                        transcript = ""
+                        for section in data['results']:
+                            section_data = section['alternatives'][0]
+                            if section_data and 'transcript' in section_data:
+                                transcript += section_data['transcript']
+
 
                 if reads % 1000 == 0:
                     end = time.time()
