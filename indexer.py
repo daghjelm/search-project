@@ -11,10 +11,10 @@ def extract_section_data(section_data, item_id, episode, show, index_name):
             '_id': item_id,
             '_source': {
                 'transcript': section_data['transcript'], 
-                'startTime': section_data['words'][0]['startTime'],
-                'endTime': section_data['words'][-1]['endTime'],
-                'showId'      : show,
-                'episodeId'   : episode
+                'start_time': section_data['words'][0]['startTime'].split('s')[0],
+                'end_time': section_data['words'][-1]['endTime'].split('s')[0],
+                'show_id'      : show,
+                'episode_id'   : episode
             }})
 
 def extract_episode_data(transcript, item_id, episode, show, index_name):
@@ -23,8 +23,8 @@ def extract_episode_data(transcript, item_id, episode, show, index_name):
             '_id': item_id,
             '_source': {
                 'transcript': transcript,
-                'showId'      : show,
-                'episodeId'   : episode
+                'show_id'      : show,
+                'episode_id'   : episode
             }})
 
 def path_wo_ds_store(path):
@@ -90,19 +90,41 @@ def main():
         )
     )
 
-    index_name = 'section-transcripts'
+    index_name = 'episode-transcripts'
 
-    # print('deleting...')
-    # if es.indices.exists(index=index_name):
-    #     es.indices.delete(index=index_name)
+    episode_properties = {
+        'transcript': {
+            'type': 'text',
+            'analyzer': 'english'
+        },
+        'show_id': {
+            'type': 'keyword',
+        },
+        'episode_id': {
+            'type': 'keyword'
+        }
+    }
 
-    # time.sleep(2)
+    section_properties = {
+        'transcript': {
+            'type': 'text',
+            'analyzer': 'english'
+        },
+        'start_time': {
+            'type': 'float',
+        },
+        'end_time': {
+            'type': 'float',
+        },
+        'show_id': {
+            'type': 'keyword',
+        },
+        'episode_id': {
+            'type': 'keyword'
+        }
+    }
 
-    # print('creating...')
-    # if not es.indices.exists(index=index_name):
-    #     es.indices.create(index=index_name)
-
-    # time.sleep(2)
+    es.indices.put_mapping(index=index_name, properties=episode_properties)
 
     path = './podcasts-no-audio-13GB/spotify-podcasts-2020/podcasts-transcripts/'
     dirs = ['0']
@@ -111,8 +133,8 @@ def main():
     print('starting...') 
     pb = parallel_bulk(
         es, 
-        generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=True), 
-        chunk_size=1500, #1500 for sections, 1000 for episodes
+        generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=False), 
+        chunk_size=1000, #1500 for sections, 1000 for episodes
         thread_count=8
         ) 
     

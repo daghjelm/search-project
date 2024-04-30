@@ -19,13 +19,13 @@ def index_metadata(es, file_path, index_name):
                     '_index': index_name,
                     '_id': podcast['episode_filename_prefix'],
                     '_source': {
-                        'showName': podcast['show_name'],
-                        'showDescription': podcast['show_description'],
-                        'episodeName': podcast['episode_name'],
-                        'episodeDescription': podcast['episode_description'],
+                        'show_name': podcast['show_name'],
+                        'show_description': podcast['show_description'],
+                        'episode_name': podcast['episode_name'],
+                        'episode_description': podcast['episode_description'],
                         'duration': podcast['duration'],
-                        'showId': podcast['show_filename_prefix'], 
-                        'episodeId': podcast['episode_filename_prefix']
+                        'show_id': podcast['show_filename_prefix'], 
+                        'episode_id': podcast['episode_filename_prefix']
                     }
                 }
             )
