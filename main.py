@@ -77,10 +77,12 @@ if __name__ == "__main__":
     first_hit = section_hits[0]
     first_hit_id = first_hit['_id']
 
-    for hit in section_hits:
-        print('hit:')
-        print('transcript:', hit['_source']['transcript'])
-        print('score:', hit['_score'])
+    print(get_section_by_id(es, first_hit_id))
+
+    # for hit in section_hits:
+    #     print('hit:')
+    #     # print('transcript:', hit['_source']['transcript'])
+    #     print('score:', hit['_score'])
     
     # [{
     #     'transcript': '..........',
