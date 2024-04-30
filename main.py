@@ -17,7 +17,7 @@ else:
 # Query entire episode transcripts
 def episode_from_query(es, query):
     resp = es.search(
-        index="transcripts",
+        index="episode-transcripts",
         pretty=True,
         query={"match_phrase": {"transcript": query}},
     )
@@ -27,7 +27,7 @@ def episode_from_query(es, query):
 # Query section transripts from a specific episode
 def get_words_from_episode(es, episode_id, query):
     resp = es.search(
-        index="words",
+        index="section-transcripts",
         pretty=True,
         query={
             "bool": {
@@ -43,7 +43,7 @@ def get_words_from_episode(es, episode_id, query):
 
 def get_section_by_id(es, section_id):
     resp = es.search(
-        index="words",
+        index="section-transcripts",
         pretty=True,
         query={"term": {"_id": section_id}},
     )
@@ -64,7 +64,6 @@ def concatenate_until_time(es, section_id, start_time, snipped_length):
             pointer += 1
     
     return transcript
-
 
 if __name__ == "__main__":
     s = " backflip. We rock paper scissors"

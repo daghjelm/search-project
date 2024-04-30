@@ -13,11 +13,9 @@ def extract_section_data(section_data, item_id, episode, show, index_name):
                 'transcript': section_data['transcript'], 
                 'startTime': section_data['words'][0]['startTime'],
                 'endTime': section_data['words'][-1]['endTime'],
-                'show'      : show,
-                'episode'   : episode
-            }
-        }
-    )
+                'showId'      : show,
+                'episodeId'   : episode
+            }})
 
 def extract_episode_data(transcript, item_id, episode, show, index_name):
     return ({
@@ -25,11 +23,9 @@ def extract_episode_data(transcript, item_id, episode, show, index_name):
             '_id': item_id,
             '_source': {
                 'transcript': transcript,
-                'show'      : show,
-                'episode'   : episode
-            }
-        }
-    )
+                'showId'      : show,
+                'episodeId'   : episode
+            }})
 
 def path_wo_ds_store(path):
     dirs = os.listdir(path)[:]
@@ -94,19 +90,19 @@ def main():
         )
     )
 
-    index_name = 'episode-transcripts'
+    index_name = 'section-transcripts'
 
-    print('deleting...')
-    if es.indices.exists(index=index_name):
-        es.indices.delete(index=index_name)
+    # print('deleting...')
+    # if es.indices.exists(index=index_name):
+    #     es.indices.delete(index=index_name)
 
-    time.sleep(2)
+    # time.sleep(2)
 
-    print('creating...')
-    if not es.indices.exists(index=index_name):
-        es.indices.create(index=index_name)
+    # print('creating...')
+    # if not es.indices.exists(index=index_name):
+    #     es.indices.create(index=index_name)
 
-    time.sleep(2)
+    # time.sleep(2)
 
     path = './podcasts-no-audio-13GB/spotify-podcasts-2020/podcasts-transcripts/'
     dirs = ['0']
@@ -115,8 +111,8 @@ def main():
     print('starting...') 
     pb = parallel_bulk(
         es, 
-        generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=False), 
-        chunk_size=1500, 
+        generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=True), 
+        chunk_size=1500, #1500 for sections, 1000 for episodes
         thread_count=8
         ) 
     
