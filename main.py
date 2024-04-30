@@ -103,11 +103,11 @@ def metadata_from_episode(es, episode_id):
 
     return resp['hits']['hits'][0]['_source']
 
-def section_for_frontend(es, query):
+def section_for_frontend(es, query, minutes):
     sections = ranked_section_from_query(es, query)
     res = []
     for section in sections:
-        transcript = concatenate_until_time(es, int(section['_id']), 2)
+        transcript = concatenate_until_time(es, int(section['_id']), minutes)
         metadata = metadata_from_episode(es, section['_source']['episode_id'])
         res.append({
             'show': metadata['show_name'],
@@ -131,6 +131,10 @@ if __name__ == '__main__':
     # s = ' backflip. We rock paper scissors'
     s = 'hey'
 
-    sections = section_for_frontend(es, s)
+    sections = section_for_frontend(es, s, minutes=2)
+    for section in sections:
+        print()
+        print(section)
+        print()
    
     
