@@ -29,17 +29,16 @@ def search():
     data = request.get_json()  # assuming JSON data
     query = data.get('query', '')  # default to empty string if not provided
     results = []
-    for hit in response["hits"]["hits"][:10]: #top 10 hits
-        
-        source = hit['_source']
+    for hit in response: #top 50 hits?
         # Find all occurrences of the query in the transcript
-        indices = find_occurrences(source['transcript'], query)
+        indices = find_occurrences(hit['transcript'], query)
         # Extract the necessary fields from each hit
         result = {
-            "podcast": source['show'], #TODO replace with podcast name
-            "transcript": source['transcript'],
-            "startTime": convert_seconds_to_hms(source['words'][0]['startTime']),
-            "endTime": convert_seconds_to_hms(source['words'][-1]['endTime']),
+            "podcast": hit['show'],
+            "episode": hit["episode"], 
+            "transcript": hit['transcript'],
+            "startTime": convert_seconds_to_hms(hit['start_time']),
+            #"endTime": convert_seconds_to_hms(hit['end_time']),
             "indices": indices
         }
         results.append(result)

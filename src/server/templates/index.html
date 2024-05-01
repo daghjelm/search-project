@@ -14,15 +14,19 @@
         <div class="search-wrapper">
             <div class="search-box">
                 <input type="text" id="searchQuery" placeholder="Enter search term" autofocus>
-                <button onclick="sendSearch()">Search</button>
             </div>
             <div class="duration-select">
-                <label for="duration">Select the length of the context that will be returned:</label>
-                <select id="duration">
-                    <option value="1">1 minute</option>
-                    <option value="2">2 minutes</option>
-                    <option value="3">3 minutes</option>
-                </select>
+                <div>
+                    <label for="duration">Length of segment:</label>
+                    <select id="duration">
+                        <option value="1">1 minute</option>
+                        <option value="2">2 minutes</option>
+                        <option value="3">3 minutes</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="search-box-button" onclick="sendSearch()">Search</button>
+                </div>
             </div>
         </div>
         

@@ -1,4 +1,13 @@
-/* General body and container styling */
+.title {
+    font-weight: bold;
+    font-size: 1.2em; /* Adjust this value as needed */
+    margin: 5px 0;
+}
+
+.highlight {
+    background-color: yellow; /* Adjust color as needed */
+}
+
 body {
     font-family: 'Arial', sans-serif;
     background: #f4f4f9;
@@ -28,7 +37,6 @@ body {
 
 /* Search box wrapper */
 .search-wrapper {
-    display: flex;
     justify-content: space-between;
     align-items: end;
     margin-bottom: 20px;
@@ -49,7 +57,7 @@ body {
     width: 100%;
 }
 
-.search-box button {
+.search-box-button {
     padding: 10px 20px;
     border: none;
     background: #5c67f2;
@@ -68,8 +76,16 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 30px;
+    margin-top: 30px;
 }
+
+.show-more-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white !important;
+} 
 
 .duration-select label {
     font-size: 0.9rem;
