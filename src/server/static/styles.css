@@ -1,0 +1,116 @@
+.title {
+    font-weight: bold;
+    font-size: 1.2em; /* Adjust this value as needed */
+    margin: 5px 0;
+}
+
+.highlight {
+    background-color: yellow; /* Adjust color as needed */
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 600px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+/* Introductory text styling */
+.intro {
+    margin-bottom: 20px;
+}
+
+/* Search box wrapper */
+.search-wrapper {
+    justify-content: space-between;
+    align-items: end;
+    margin-bottom: 20px;
+}
+
+/* Search box styling */
+.search-box {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.search-box input[type="text"] {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    width: 100%;
+}
+
+.search-box-button {
+    padding: 10px 20px;
+    border: none;
+    background: #5c67f2;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-box button:hover {
+    background-color: #4a54e1;
+}
+
+/* Duration selection styling */
+.duration-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.show-more-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white !important;
+} 
+
+.duration-select label {
+    font-size: 0.9rem;
+}
+
+.duration-select select {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* Results styling */
+#results div {
+    background: #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+#results div:last-child {
+    margin-bottom: 0;
+}
+
+.highlight {
+    background-color: yellow;
+} 

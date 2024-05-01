@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Spotify Podcasts</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Search Spotify podcasts</h1>
+        <p class="intro">Please input your text query that should be searched for in the indexed podcast dataset</p>
+        
+        <div class="search-wrapper">
+            <div class="search-box">
+                <input type="text" id="searchQuery" placeholder="Enter search term" autofocus>
+            </div>
+            <div class="duration-select">
+                <div>
+                    <label for="duration">Length of segment:</label>
+                    <select id="duration">
+                        <option value="1">1 minute</option>
+                        <option value="2">2 minutes</option>
+                        <option value="3">3 minutes</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="search-box-button" onclick="sendSearch()">Search</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
