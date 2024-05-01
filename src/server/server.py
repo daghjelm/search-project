@@ -11,6 +11,7 @@ searcher = Searcher()
 def find_occurrences(text, query):
     return [match.span() for match in re.finditer(query, text, re.IGNORECASE)] 
 
+ 
 def convert_seconds_to_hms(time_str):
     # Remove the 's' at the end and convert to float
     seconds = round(float(time_str.rstrip('s')))
@@ -31,8 +32,8 @@ def search():
     data = request.get_json()  # assuming JSON data
     query = data.get('query', '')  # default to empty string if not provided
     minutes = data.get('minutes', 2)  # default to 2 minutes if not provided
-    print(query)
-    response = searcher.section_for_frontend(query, int(minutes))
+    weighted = data.get('weighted', True) == 'True'
+    response = searcher.section_for_frontend(query, int(minutes), weighted)
     results = []
     for hit in response: #top 50 hits?
         # Find all occurrences of the query in the transcript

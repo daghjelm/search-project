@@ -8,12 +8,13 @@ document.getElementById('searchQuery').addEventListener('keypress', function (ev
 function sendSearch() {
     const query = document.getElementById('searchQuery').value;
     const minutes = document.getElementById('duration').value;
+    const weighted = document.getElementById('weighted').value;
     fetch(`${config.baseURL}/search`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ query, minutes})
+        body: JSON.stringify({ query, minutes, weighted})
     }).then(response => response.json())
         .then(data => {
             const resultsDiv = document.getElementById('results');
@@ -21,6 +22,10 @@ function sendSearch() {
             let hits = data.hits || [];
 
             let displayIndex = 0; // Starting index to display results
+            const numResultsDiv = document.createElement('div');
+            numResultsDiv.className = 'num-results-container';
+            numResultsDiv.innerHTML = 'Number of results: ' + hits.length
+            resultsDiv.appendChild(numResultsDiv);
 
             function displayResults() {
                 const endIndex = Math.min(displayIndex + 5, hits.length);

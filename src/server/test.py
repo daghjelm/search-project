@@ -1,3 +1,6 @@
-list = [1,2,3,4]
+x = "False"
 
-print(list[:2])
+
+
+if (x):
+    print("asd")
