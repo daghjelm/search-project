@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify, render_template
 from elasticsearch import Elasticsearch
 from response import response
+from searcher import Searcher
 import re
 
 app = Flask(__name__, static_url_path="", static_folder="static", template_folder="templates")
+searcher = Searcher()
 
 #es = Elasticsearch()
 def find_occurrences(text, query):
@@ -28,6 +30,9 @@ def search():
     # Process results to include necessary data
     data = request.get_json()  # assuming JSON data
     query = data.get('query', '')  # default to empty string if not provided
+    minutes = data.get('minutes', 2)  # default to 2 minutes if not provided
+    print(query)
+    response = searcher.section_for_frontend(query, int(minutes))
     results = []
     for hit in response: #top 50 hits?
         # Find all occurrences of the query in the transcript
@@ -51,4 +56,5 @@ def home():
     return render_template('index.html')
 
 if __name__ == "__main__":
+
     app.run(host='0.0.0.0', port=9090, debug=True)

@@ -7,12 +7,13 @@ document.getElementById('searchQuery').addEventListener('keypress', function (ev
 
 function sendSearch() {
     const query = document.getElementById('searchQuery').value;
+    const minutes = document.getElementById('duration').value;
     fetch(`${config.baseURL}/search`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ query: query })
+        body: JSON.stringify({ query, minutes})
     }).then(response => response.json())
         .then(data => {
             const resultsDiv = document.getElementById('results');
