@@ -8,9 +8,9 @@ def episodes_from_query(es, query):
         query={'match_phrase': {'transcript': query}},
     )
 
-    episodes = map(lambda x: x['_source']['episode_id'], resp['hits']['hits'])
+    episodes = map(lambda x: {'id': x['_source']['episode_id'], 'score': x['_score']}, resp['hits']['hits'])
 
-    return episodes
+    return episodes 
 
 # Query section transripts from a specific episode
 def get_sections_from_episode(es, episode_id, query):
@@ -40,20 +40,50 @@ def get_section_by_id(es, section_id):
 
 def sections_from_episodes(episodes, query):
     sections = []
-    for episode_id in episodes:
-        section = get_sections_from_episode(es, episode_id, query)
-        sections += section
+    for episode_id_score in episodes:
+        episode_sections = get_sections_from_episode(es, episode_id_score.get(id), query)
+
+        sections += episode_sections
     
     return sections
 
-def filter_rank_sections(sections):
+def rank_sections_only(sections):
     sections.sort(key=lambda x: x['_score'], reverse=True)
     return sections
 
+def get_weighted_score(episode_score, section_score):
+    episode_weight = 0.5
+    section_weight = 0.5
+
+    return episode_weight * episode_score + section_weight * section_score
+
+def rank_sections_weighted(sections, episode_id_score):
+    score_map = episode_score_map(episode_id_score)
+    sections.sort(
+        key=lambda x: get_weighted_score(score_map.get(x['_source']['episode_id']), x['_score']), 
+        reverse=True
+        )
+
+    return sections
+
+def episode_score_map(episodes):
+    score_map = {}
+    for episode in episodes:
+        score_map[episode['id']] = episode['score']
+    
+    return score_map
+
 def ranked_section_from_query(es, query):
-    episodes = episodes_from_query(es, query)
-    sections = sections_from_episodes(episodes, query)
-    return filter_rank_sections(sections)
+    episode_id_score = episodes_from_query(es, query)
+    sections = sections_from_episodes(episode_id_score, query)
+
+    return rank_sections_only(sections)
+
+def ranked_section_from_query_weighted(es, query):
+    episode_id_score = episodes_from_query(es, query)
+    sections = sections_from_episodes(episode_id_score, query)
+
+    return rank_sections_weighted(sections, episode_id_score)
 
 def concatenate_until_time(es, section_id_org: int, n_minute):
     
@@ -128,13 +158,10 @@ if __name__ == '__main__':
         )
     )
 
-    # s = ' backflip. We rock paper scissors'
-    s = 'hey'
+    s = ' backflip. We rock paper scissors'
+    # s = 'hey'
 
     sections = section_for_frontend(es, s, minutes=2)
-    for section in sections:
-        print()
-        print(section)
-        print()
+    print(sections)
    
     
