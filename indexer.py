@@ -84,13 +84,13 @@ def generate_index_data(podcast_path, index_name, dirs=None, letters=None, secti
 def main():
     es = Elasticsearch(
         'https://localhost:9200',
-        basic_auth=['elastic', 'xVw89i=t-Be6_eN7-iNS'],
+        basic_auth=['elastic', 'YeY_-u-be2U2oGv7I7n_'],
         ssl_assert_fingerprint=(
-            '9b9c41a449eedc4ee0b6d4c555fd821213cc4b85755c0121d172c566b9047604'
+            'b3bc39969f4f940e9a1bc02f39792f59142cf20fc9c101fd048578060645912c'
         )
     )
 
-    index_name = 'episode-transcripts'
+    index_name = 'section-transcripts'
 
     episode_properties = {
         'transcript': {
@@ -124,17 +124,19 @@ def main():
         }
     }
 
-    es.indices.put_mapping(index=index_name, properties=episode_properties)
+    # es.indices.put_mapping(index=index_name, properties=episode_properties)
+    es.indices.put_mapping(index=index_name, properties=section_properties)
 
     path = './podcasts-no-audio-13GB/spotify-podcasts-2020/podcasts-transcripts/'
-    dirs = ['0']
-    letters = ['A', 'B', 'C', 'D']
+    dirs = None
+    letters = None
 
     print('starting...') 
     pb = parallel_bulk(
         es, 
-        generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=False), 
-        chunk_size=1000, #1500 for sections, 1000 for episodes
+        # generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=False), 
+        generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=True), 
+        chunk_size=1500, #1500 for sections, 1000 for episodes
         thread_count=8
         ) 
     
