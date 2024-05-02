@@ -49,9 +49,9 @@ def insert_bulk_data(es, bulk_data):
 if __name__ == "__main__":
     es = Elasticsearch(
         'https://localhost:9200',
-        basic_auth=['elastic', 'xVw89i=t-Be6_eN7-iNS'],
+        basic_auth=['elastic', 'YeY_-u-be2U2oGv7I7n_'],
         ssl_assert_fingerprint=(
-            '9b9c41a449eedc4ee0b6d4c555fd821213cc4b85755c0121d172c566b9047604'
+            'b3bc39969f4f940e9a1bc02f39792f59142cf20fc9c101fd048578060645912c'
         )
     )
 

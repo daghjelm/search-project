@@ -33,64 +33,54 @@ def path_wo_ds_store(path):
         dirs.remove('.DS_Store')
     return dirs
 
-def generate_index_data(podcast_path, index_name, dirs=None, letters=None, sections=True):
+def generate_index_data(paths, index_name, sections=True):
     start = time.time()
     delta_timer = time.time()
-    items = 0
+    items = 0 
     reads = 0
 
-    if dirs is None:
+    for podcast_path in paths:
+    
         dirs = path_wo_ds_store(podcast_path)
 
-    for dir in dirs:
-        if letters is None:
+        for dir in dirs:
             letters = path_wo_ds_store(podcast_path + dir + '/')
-        for letter in letters:
-            for show in path_wo_ds_store(podcast_path + dir + '/' + letter):
-                for episode in path_wo_ds_store(podcast_path + dir + '/' + letter + '/' + show):
+            for letter in letters:
+                for show in path_wo_ds_store(podcast_path + dir + '/' + letter):
+                    for episode in path_wo_ds_store(podcast_path + dir + '/' + letter + '/' + show):
 
-                    path = podcast_path + dir + '/' + letter + '/' + show + '/' + episode
-                    reads += 1
+                        path = podcast_path + dir + '/' + letter + '/' + show + '/' + episode
+                        reads += 1
 
-                    f = open(path, 'rb')
-                    data = orjson.loads(f.read())
+                        f = open(path, 'rb')
+                        data = orjson.loads(f.read())
 
-                    if sections:
-                        for section in data['results']:
-                            section_data = section['alternatives'][0]
-                            if section_data and 'transcript' in section_data:
-                                yield extract_section_data(section_data, items, episode.split('.')[0], show, index_name)
-                                items += 1
-                    else:
-                        transcript = ''
-                        for section in data['results']:
-                            section_data = section['alternatives'][0]
-                            if section_data and 'transcript' in section_data:
-                                transcript += section_data['transcript']
-                        yield extract_episode_data(transcript, items, episode.split('.')[0], show, index_name)
-                        items += 1
-                    
-                    f.close()
+                        if sections:
+                            for section in data['results']:
+                                section_data = section['alternatives'][0]
+                                if section_data and 'transcript' in section_data:
+                                    yield extract_section_data(section_data, items, episode.split('.')[0], show, index_name)
+                                    items += 1
+                        else:
+                            transcript = ''
+                            for section in data['results']:
+                                section_data = section['alternatives'][0]
+                                if section_data and 'transcript' in section_data:
+                                    transcript += section_data['transcript']
+                            yield extract_episode_data(transcript, items, episode.split('.')[0], show, index_name)
+                            items += 1
+                        
+                        f.close()
 
-                    if reads % 1000 == 0:
-                        end = time.time()
-                        print(f'took {end - start} (delta {end - delta_timer}) seconds for {items} items and {reads} reads')
-                        delta_timer = time.time()
+                        if reads % 1000 == 0:
+                            end = time.time()
+                            print(f'took {end - start} (delta {end - delta_timer}) seconds for {items} items and {reads} reads')
+                            delta_timer = time.time()
 
     print('finished in', time.time() - start, 'seconds')
     print('items', items)
-    raise StopIteration
 
-def main():
-    es = Elasticsearch(
-        'https://localhost:9200',
-        basic_auth=['elastic', 'YeY_-u-be2U2oGv7I7n_'],
-        ssl_assert_fingerprint=(
-            'b3bc39969f4f940e9a1bc02f39792f59142cf20fc9c101fd048578060645912c'
-        )
-    )
-
-    index_name = 'section-transcripts'
+def index_episodes(es, paths, index_name):
 
     episode_properties = {
         'transcript': {
@@ -105,6 +95,17 @@ def main():
         }
     }
 
+    es.indices.put_mapping(index=index_name, properties=episode_properties)
+    pb = parallel_bulk(
+        es, 
+        generate_index_data(paths=paths, index_name=index_name, sections=False), 
+        chunk_size=1000, 
+        thread_count=8
+        ) 
+    
+    deque(pb, maxlen=0)
+
+def index_sections(es, paths, index_name):
     section_properties = {
         'transcript': {
             'type': 'text',
@@ -124,23 +125,46 @@ def main():
         }
     }
 
-    # es.indices.put_mapping(index=index_name, properties=episode_properties)
     es.indices.put_mapping(index=index_name, properties=section_properties)
-
-    path = './podcasts-no-audio-13GB/spotify-podcasts-2020/podcasts-transcripts/'
-    dirs = None
-    letters = None
-
-    print('starting...') 
     pb = parallel_bulk(
         es, 
-        # generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=False), 
-        generate_index_data(path, index_name, dirs=dirs, letters=letters, sections=True), 
-        chunk_size=1500, #1500 for sections, 1000 for episodes
+        generate_index_data(paths=paths, index_name=index_name, sections=True), 
+        chunk_size=1500, 
         thread_count=8
         ) 
     
     deque(pb, maxlen=0)
+
+def main():
+    es = Elasticsearch(
+        'https://localhost:9200',
+        basic_auth=['elastic', 'YeY_-u-be2U2oGv7I7n_'],
+        ssl_assert_fingerprint=(
+            'b3bc39969f4f940e9a1bc02f39792f59142cf20fc9c101fd048578060645912c'
+        )
+    )
+
+    episode_index_name = 'episode-transcripts'
+    section_index_name = 'section-transcripts'
+
+    if not es.indices.exists(index=section_index_name):
+        es.indices.create(index=section_index_name)
+
+    if not es.indices.exists(index=episode_index_name):
+        es.indices.create(index=episode_index_name)
+
+    paths = [
+        "./podcasts-no-audio-13GB/spotify-podcasts-2020/podcasts-transcripts/",
+        "./podcasts-no-audio-13GB/spotify-podcasts-2020-3-5/podcasts-transcripts/",
+        "./podcasts-no-audio-13GB/spotify-podcasts-2020-6-7/podcasts-transcripts/",
+        ]
+
+    print('starting...') 
+    index_episodes(es, paths, episode_index_name)
+
+    time.sleep(5)
+
+    index_sections(es, paths, section_index_name)
 
 if __name__ == '__main__':
     main()

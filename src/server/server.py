@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch as es
 from response import response
 from searcher import Searcher
 import re
