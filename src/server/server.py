@@ -8,8 +8,11 @@ app = Flask(__name__, static_url_path="", static_folder="static", template_folde
 searcher = Searcher()
 
 #es = Elasticsearch()
-def find_occurrences(text, query):
-    return [match.span() for match in re.finditer(query, text, re.IGNORECASE)] 
+def find_word_occurrences(text, query):
+    word_indices = []
+    for word in query.split():
+        word_indices += [match.span() for match in re.finditer(re.escape(word), text, re.IGNORECASE)]
+    return sorted(word_indices)
 
  
 def convert_seconds_to_hms(time_str):
@@ -39,7 +42,7 @@ def search():
     results = []
     for hit in response: #top 50 hits?
         # Find all occurrences of the query in the transcript
-        indices = find_occurrences(hit['transcript'], query)
+        indices = find_word_occurrences(hit['transcript'], query)
         # Extract the necessary fields from each hit
         result = {
             "podcast": hit['show'],
