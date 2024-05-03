@@ -32,8 +32,27 @@ class Searcher:
         episodes = map(lambda x: {'id': x['_source']['episode_id'], 'score': x['_score']}, resp['hits']['hits'])
 
         return list(episodes)
+    
+    def episode_section_map(self, episodes):
+        resp = self.es.search(
+            index='episode-transcripts',
+            pretty=True,
+            size = 100,
+            query= {'match': {
+                        'transcript': {
+                            'query': query,
+                            'fuzziness': 'AUTO',
+                            'operator': 'or',
+                        }
+                    }},
+            # query={'match_phrase': {'transcript': query}},
+        )
 
-    # Query section transripts from a specific episode
+        episodes = map(lambda x: {'id': x['_source']['episode_id'], 'score': x['_score']}, resp['hits']['hits'])
+
+        return list(episodes)
+
+    # get all the sections that are in the episode and match the query
     def get_sections_from_episode(self, episode_id, query):
         resp = self.es.search(
             index='section-transcripts',
@@ -65,17 +84,18 @@ class Searcher:
 
         return resp['hits']['hits'][0]['_source']
 
+    # loop over episodes and get all sections that are in the episode and match the query
     def sections_from_episodes(self, episode_id_score, query):
         sections = []
-        sections_map = {}
         for episode in episode_id_score:
             episode_sections = self.get_sections_from_episode(episode['id'], query)
 
             sections += episode_sections
-            sections_map[episode['id']] = episode_sections
         
-        return sections, sections_map
+        return sections
     
+
+    # get all sections that match the query from the sections index
     def sections_from_query(self, query):
         resp = self.es.search(
             index='section-transcripts',
@@ -89,13 +109,7 @@ class Searcher:
                         }
                     }})
 
-        sections = resp['hits']['hits']
-        sections_map = {}
-        for section in sections:
-            if section['_source']['episode_id'] not in sections_map:
-                sections_map[section['_source']['episode_id']] = []
-            sections_map[section['_source']['episode_id']].append(section)
-        return resp['hits']['hits'], sections_map
+        return resp['hits']['hits']
 
     def rank_sections_only(self, sections):
         sections.sort(key=lambda x: x['_score'], reverse=True)
@@ -128,10 +142,32 @@ class Searcher:
                 return i
         return -1
     
-    def concatenate_with_sections(self, section_id_org, n_minutes, sections):
-        section_index = self.index_of_section(section_id_org, sections) 
+    def get_section_span(self, section_id: int, episode_id):
+        ids = [str(i) for i in range(section_id - 10, section_id + 10)]
+        resp = self.es.search(
+            index='section-transcripts',
+            pretty=True,
+            size = 100,
+            query={
+                'bool': {
+                    'must': [
+                        {'term': {'episode_id': episode_id }},
+                        {'match': { 'transcript': {
+                            'query': ' '.join(ids),
+                            'operator': 'or',
+                        }}}
+                    ]
+                }
+            })
+
+        return resp['hits']['hits']
+    
+    def concatenate_with_sections(self, section_id, episode_id, n_minutes):
+        section_index = self.index_of_section(section_id, sections) 
         if section_index < 0:
             raise ValueError('Section not found in sections')
+        
+        sections = self.get_section_span(n_minutes, section_id, episode_id)
         
         n_sections = n_minutes * 2
         #start_index = section_index - (n_sections // 2 - 1)
@@ -149,10 +185,12 @@ class Searcher:
             end_index = len(sections) - 1
         
         transcript = ''
-        print('section_index:', section_index)
-        print('len sectinos', len(sections))
-        print('start_index:', start_index)
-        print('end_index:', end_index)
+
+        # print('section_index:', section_index)
+        # print('len sectinos', len(sections))
+        # print('start_index:', start_index)
+        # print('end_index:', end_index)
+
         for section in sections[start_index:end_index]:
             print(transcript)
             transcript += section['_source']['transcript'] + '\n'
@@ -197,7 +235,6 @@ class Searcher:
                 transcript += '\n' + section['transcript']
             
             iteration += 1
-        
         
         return transcript
 
