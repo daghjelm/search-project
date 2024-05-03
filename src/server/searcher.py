@@ -107,15 +107,15 @@ class Searcher:
 
         return self.rank_sections_weighted(sections, episode_id_score)
 
-    def concatenate_until_time(self, section_id_org: int, episode_id, n_minute):
-        
+    def concatenate_until_time(self, section_id_org: int, episode_id, n_minute, sections):
+
         desired_length = n_minute * 60
         total_time = 0 
         transcript = ''
         section_id = section_id_org
         iteration = 0
 
-        TOTAL_INDEX_SIZE = 124500 #Borde int detta vara tot segments för avsnittet?
+        TOTAL_INDEX_SIZE = 8429540
         
         
         while (total_time < desired_length):
@@ -130,9 +130,9 @@ class Searcher:
             section_id = section_id_org + offset
             section = self.get_section_by_id(section_id) 
             
-            #print(transcript)
-            #if section_id <= 0 or section_id >= TOTAL_INDEX_SIZE or section['episode_id'] != episode_id:
-            #    return transcript
+        
+            if section_id <= 0 or section_id >= TOTAL_INDEX_SIZE or section['episode_id'] != episode_id:
+                return transcript
             
             start = section['start_time']
             end = section['end_time']
