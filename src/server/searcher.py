@@ -32,25 +32,6 @@ class Searcher:
         episodes = map(lambda x: {'id': x['_source']['episode_id'], 'score': x['_score']}, resp['hits']['hits'])
 
         return list(episodes)
-    
-    def episode_section_map(self, episodes):
-        resp = self.es.search(
-            index='episode-transcripts',
-            pretty=True,
-            size = 100,
-            query= {'match': {
-                        'transcript': {
-                            'query': query,
-                            'fuzziness': 'AUTO',
-                            'operator': 'or',
-                        }
-                    }},
-            # query={'match_phrase': {'transcript': query}},
-        )
-
-        episodes = map(lambda x: {'id': x['_source']['episode_id'], 'score': x['_score']}, resp['hits']['hits'])
-
-        return list(episodes)
 
     # get all the sections that are in the episode and match the query
     def get_sections_from_episode(self, episode_id, query):
@@ -142,8 +123,8 @@ class Searcher:
                 return i
         return -1
     
-    def get_section_span(self, section_id: int, episode_id):
-        ids = [str(i) for i in range(section_id - 10, section_id + 10)]
+    def get_section_span(self, section_id: int, episode_id, n_minutes):
+        ids = [str(i) for i in range(section_id - n_minutes, section_id + n_minutes)]
         resp = self.es.search(
             index='section-transcripts',
             pretty=True,
@@ -152,22 +133,22 @@ class Searcher:
                 'bool': {
                     'must': [
                         {'term': {'episode_id': episode_id }},
-                        {'match': { 'transcript': {
-                            'query': ' '.join(ids),
-                            'operator': 'or',
-                        }}}
+                        {'ids': {
+                            'values': ids
+                        }},
                     ]
                 }
             })
 
-        return resp['hits']['hits']
+        return '\n'.join(map(lambda x: x['_source']['transcript'], resp['hits']['hits']))
     
     def concatenate_with_sections(self, section_id, episode_id, n_minutes):
+        section_id = int(section_id)
+        sections = self.get_section_span(section_id, episode_id)
+
         section_index = self.index_of_section(section_id, sections) 
         if section_index < 0:
             raise ValueError('Section not found in sections')
-        
-        sections = self.get_section_span(n_minutes, section_id, episode_id)
         
         n_sections = n_minutes * 2
         #start_index = section_index - (n_sections // 2 - 1)
@@ -250,14 +231,13 @@ class Searcher:
     def section_for_frontend(self, query, minutes, weighted=False):
         start = time.time()
         sections = []
-        sections_map = {}
 
         if weighted:
             episode_id_score = self.episodes_from_query(query)
-            sections, sections_map = self.sections_from_episodes(episode_id_score, query)
+            sections = self.sections_from_episodes(episode_id_score, query)
             sections = self.rank_sections_weighted(sections, episode_id_score)
         else:
-            sections, sections_map = self.sections_from_query(query)
+            sections = self.sections_from_query(query)
             sections = self.rank_sections_only(sections)
             """
             episode_id_score = self.episodes_from_query(query)
@@ -274,12 +254,15 @@ class Searcher:
         
         metadatas = {}
         for section in sections:
-            # transcript = self.concatenate_until_time(int(section['_id']), section['_source']['episode_id'], minutes)
+
+            # query to get previus and next sections to get entire span of transcripts
+            transcript = self.get_section_span(int(section['_id']), section['_source']['episode_id'], minutes)
+
             loop_start = time.time()
-            transcript = self.concatenate_with_sections(section['_id'], minutes, sections_map[section['_source']['episode_id']])
-            transcript_time += time.time() - loop_start
+            # this is to speedup the process of getting metadata
             if section['_source']['episode_id'] not in metadatas:
                 metadatas[section['_source']['episode_id']] = self.metadata_from_episode(section['_source']['episode_id'])
+
             metadata = metadatas[section['_source']['episode_id']]
             metadata_time += time.time() - loop_start
             res.append({
@@ -302,7 +285,7 @@ if __name__ == '__main__':
     s = ' backflip. We rock paper scissors'
     # s = 'hey'
 
-    sections = searcher.section_for_frontend(s, minutes=2, weighted=False)
+    sections = searcher.section_for_frontend(s, minutes=2, weighted=True)
 
     for section in sections[:2]:
         print('-----------------------------------------------------')
