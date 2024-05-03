@@ -20,7 +20,9 @@ The project is built upon Elasticsearch as the search engine to construct the in
 1. Download Elastic Search https://www.elastic.co/downloads/elasticsearch
 2. Follow instructions https://www.elastic.co/guide/en/elasticsearch/reference/current/targz.html
 3. Run Elastic Search with `./path/to/elasticsearch/bin/elasticsearch `
-4. Store the elastic search password as an environment variable `export ELASTIC_PASSWORD="your_password"`
+4. When you start elastic you will see the password and ssl fingerprint in the terminal, save these.
+5. Store the elastic search password as an environment variable `export ELASTIC_PW=your_password`
+6. Store the elastic ssl fingerprint as an environment variable `export ELASTIC_SSL=your_ssl`
 
 ### How to index
 
