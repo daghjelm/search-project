@@ -1,6 +1,6 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
-import csv, time
+import csv, time, os
 
 #
 # Reads and indexes the file_path file into index_name
@@ -47,11 +47,14 @@ def insert_bulk_data(es, bulk_data):
         print("Error inserting bulk data:", e)
 
 if __name__ == "__main__":
+    pw = os.environ.get('ELASTIC_PW')
+    ssl = os.environ.get('ELASTIC_SSL')
+
     es = Elasticsearch(
         'https://localhost:9200',
-        basic_auth=['elastic', 'YeY_-u-be2U2oGv7I7n_'],
+        basic_auth=['elastic', pw],
         ssl_assert_fingerprint=(
-            'b3bc39969f4f940e9a1bc02f39792f59142cf20fc9c101fd048578060645912c'
+            ssl
         )
     )
 

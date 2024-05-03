@@ -1,12 +1,15 @@
 from elasticsearch import Elasticsearch
+import os
 
 class Searcher:
     def __init__(self):
+        pw = os.environ.get('ELASTIC_PW') 
+        ssl = os.environ.get('ELASTIC_SSL')
         self.es = Elasticsearch(
             'https://localhost:9200',
-            basic_auth=['elastic', 'YeY_-u-be2U2oGv7I7n_'],
+            basic_auth=['elastic', pw],
             ssl_assert_fingerprint=(
-                'b3bc39969f4f940e9a1bc02f39792f59142cf20fc9c101fd048578060645912c'
+                ssl
             )
         )
 
