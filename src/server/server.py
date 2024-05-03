@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from elasticsearch import Elasticsearch as es
 from response import response
 from searcher import Searcher
-import re
+import re, time
 
 app = Flask(__name__, static_url_path="", static_folder="static", template_folder="templates")
 searcher = Searcher()
@@ -33,7 +33,9 @@ def search():
     query = data.get('query', '')  # default to empty string if not provided
     minutes = data.get('minutes', 2)  # default to 2 minutes if not provided
     weighted = data.get('weighted', True) == 'True'
+    start = time.time()
     response = searcher.section_for_frontend(query, int(minutes), weighted)
+    print('Time taken in post:', time.time() - start)
     results = []
     for hit in response: #top 50 hits?
         # Find all occurrences of the query in the transcript
