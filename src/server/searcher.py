@@ -4,9 +4,9 @@ class Searcher:
     def __init__(self):
         self.es = Elasticsearch(
             'https://localhost:9200',
-            basic_auth=['elastic', 'xVw89i=t-Be6_eN7-iNS'],
+            basic_auth=['elastic', 'YeY_-u-be2U2oGv7I7n_'],
             ssl_assert_fingerprint=(
-                '9b9c41a449eedc4ee0b6d4c555fd821213cc4b85755c0121d172c566b9047604'
+                'b3bc39969f4f940e9a1bc02f39792f59142cf20fc9c101fd048578060645912c'
             )
         )
 
@@ -75,7 +75,8 @@ class Searcher:
         return sections
 
     def get_weighted_score(self, episode_score, section_score, episode_weight=0.5, section_weight=0.5):
-
+        print(episode_score)
+        print(section_score)
         return episode_weight * episode_score + section_weight * section_score
 
     def rank_sections_weighted(self, sections, episode_id_score):
@@ -106,15 +107,16 @@ class Searcher:
 
         return self.rank_sections_weighted(sections, episode_id_score)
 
-    def concatenate_until_time(self, section_id_org: int, episode_id, n_minute):
-        
+    def concatenate_until_time(self, section_id_org: int, episode_id, n_minute, sections):
+
         desired_length = n_minute * 60
         total_time = 0 
         transcript = ''
         section_id = section_id_org
         iteration = 0
 
-        TOTAL_INDEX_SIZE = 124500
+        TOTAL_INDEX_SIZE = 8429540
+        
         
         while (total_time < desired_length):
             
@@ -128,6 +130,7 @@ class Searcher:
             section_id = section_id_org + offset
             section = self.get_section_by_id(section_id) 
             
+        
             if section_id <= 0 or section_id >= TOTAL_INDEX_SIZE or section['episode_id'] != episode_id:
                 return transcript
             
@@ -142,7 +145,8 @@ class Searcher:
                 transcript += '\n' + section['transcript']
             
             iteration += 1
-            
+        
+        
         return transcript
 
     def metadata_from_episode(self, episode_id):
