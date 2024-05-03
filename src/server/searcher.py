@@ -18,6 +18,7 @@ class Searcher:
         resp = self.es.search(
             index='episode-transcripts',
             pretty=True,
+            size = 100,
             query= {'match': {
                         'transcript': {
                             'query': query,
@@ -79,6 +80,7 @@ class Searcher:
         resp = self.es.search(
             index='section-transcripts',
             pretty=True,
+            size = 100,
             query={'match': {
                         'transcript': {
                             'query': query,
@@ -99,7 +101,9 @@ class Searcher:
         sections.sort(key=lambda x: x['_score'], reverse=True)
         return sections
 
-    def get_weighted_score(self, episode_score, section_score, episode_weight=0.5, section_weight=0.5):
+    def get_weighted_score(self, episode_score, section_score, episode_weight=6, section_weight=1):
+        print(f"Episode score: {episode_score}")
+        print(f"Section score: {section_score}")
         return episode_weight * episode_score + section_weight * section_score
 
     def rank_sections_weighted(self, sections, episode_id_score):
@@ -128,19 +132,29 @@ class Searcher:
         section_index = self.index_of_section(section_id_org, sections) 
         if section_index < 0:
             raise ValueError('Section not found in sections')
-
-        n_sections = n_minutes * 2
-        start_index = section_index - (n_sections // 2 - 1)
-        end_index = section_index + (n_sections // 2)
-
-        if start_index < 0:
-            start_index = 0
         
-        if end_index >= len(sections):
+        n_sections = n_minutes * 2
+        #start_index = section_index - (n_sections // 2 - 1)
+        start_index = section_index - n_sections // 2
+        #end_index = section_index + (n_sections // 2)
+        end_index = section_index + n_sections // 2
+
+        # if there isnt enough space backwards in the episode
+        if start_index < 0:
+            end_index -= start_index
+            start_index = section_index
+        
+        if end_index > len(sections) - 1:
+            start_index -= end_index - (len(sections) - 1)
             end_index = len(sections) - 1
         
         transcript = ''
+        print('section_index:', section_index)
+        print('len sectinos', len(sections))
+        print('start_index:', start_index)
+        print('end_index:', end_index)
         for section in sections[start_index:end_index]:
+            print(transcript)
             transcript += section['_source']['transcript'] + '\n'
 
         return transcript
@@ -208,6 +222,12 @@ class Searcher:
         else:
             sections, sections_map = self.sections_from_query(query)
             sections = self.rank_sections_only(sections)
+            """
+            episode_id_score = self.episodes_from_query(query)
+            sections, sections_map = self.sections_from_episodes(episode_id_score, query)
+            sections = self.rank_sections_only(sections)
+            """
+
 
         print('before stuff time ', time.time() - start)
 
