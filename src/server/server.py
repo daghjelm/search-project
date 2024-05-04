@@ -24,20 +24,13 @@ def convert_seconds_to_hms(time_str):
     # Format the time string in "hh:mm:ss" format
     return f"{hours:02}:{minutes:02}:{seconds:02}"
 
-@app.route('/search', methods=['POST'])
-def search():
-    
-    #response = es.search(index="your_index_name", body={"query": {"match": {"content": query}}})
-    # Process results to include necessary data
-    data = request.get_json()  # assuming JSON data
+def get_next_from_searcher(data):
     query = data.get('query', '')  # default to empty string if not provided
     minutes = data.get('minutes', 2)  # default to 2 minutes if not provided
-    weighted = data.get('weighted', True) == 'True'
-    start = time.time()
-    response = searcher.section_for_frontend(query, int(minutes), weighted)
-    print('Time taken in post:', time.time() - start)
+
+    response = searcher.get_next_sections_for_frontend(10, minutes)
     results = []
-    for hit in response: #top 50 hits?
+    for hit in response['hits']: #top 50 hits?
         # Find all occurrences of the query in the transcript
         indices = find_occurrences(hit['transcript'], query)
         # Extract the necessary fields from each hit
@@ -51,8 +44,26 @@ def search():
         }
         results.append(result)
 
-    return jsonify({"hits": results})
+    return jsonify({"hits": results, 'numHits': response['num_hits']})
 
+
+@app.route('/search', methods=['POST'])
+def search():
+    
+    #response = es.search(index="your_index_name", body={"query": {"match": {"content": query}}})
+    # Process results to include necessary data
+    data = request.get_json()  # assuming JSON data
+    query = data.get('query', '')  # default to empty string if not provided
+    weighted = data.get('weighted', True) == 'True'
+
+    searcher.do_search(query, weighted)
+    # response = searcher.section_for_frontend(query, int(minutes), weighted)
+    return get_next_from_searcher(data)
+
+@app.route('/get-next', methods=['POST'])
+def get_next():
+    data = request.get_json()  # assuming JSON data
+    return get_next_from_searcher(data)
 
 @app.route('/')
 def home():

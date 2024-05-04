@@ -47,7 +47,10 @@ class Searcher:
 
     def get_next_sections_for_frontend(self, n, minutes=2):
         sections = self.get_next_sections(n)
-        return self.concatenate_section_transcripts(sections, minutes)
+        return {
+                'hits': self.concatenate_section_transcripts(sections, minutes),
+                'num_hits': len(sections),
+            }
 
 
     # Query entire episode transcripts
@@ -183,7 +186,8 @@ class Searcher:
                 return i
         return -1
     
-    def get_section_span(self, section_id: int, episode_id, n_minutes):
+    def get_section_span(self, section_id: int, episode_id, n_minutes: int):
+        n_minutes = int(n_minutes)
         ids = [str(i) for i in range(section_id - n_minutes, section_id + n_minutes)]
         resp = self.es.search(
             index='section-transcripts',
@@ -361,7 +365,7 @@ if __name__ == '__main__':
 
     searcher.do_search(s, 2, weighted=True)
     sections = searcher.get_next_sections_for_frontend(5, 2)
-    for section in sections:
+    for section in sections['hits']:
         print('-----------------------------------------------------')
         # print('Transcript:', section['transcript'])
         print('Show:', section['show'])
@@ -371,7 +375,7 @@ if __name__ == '__main__':
         print()
 
     sections = searcher.get_next_sections_for_frontend(5, 2)
-    for section in sections:
+    for section in sections['hits']:
         print('-----------------------------------------------------')
         # print('Transcript:', section['transcript'])
         print('Show:', section['show'])
