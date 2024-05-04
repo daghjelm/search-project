@@ -23,7 +23,7 @@ class Searcher:
 
     def get_next_sections(self, n):
         next_sections = self.current_sections[self.pointer:self.pointer + n]
-        self.pointer += n - 1
+        self.pointer += n 
         return next_sections
 
     def concatenate_section_transcripts(self, sections, minutes):
@@ -49,7 +49,7 @@ class Searcher:
         sections = self.get_next_sections(n)
         return {
                 'hits': self.concatenate_section_transcripts(sections, minutes),
-                'num_hits': len(sections),
+                'num_hits': len(self.current_sections),
             }
 
 
@@ -146,7 +146,7 @@ class Searcher:
         resp = self.es.search(
             index='section-transcripts',
             pretty=True,
-            size = 100,
+            size = 1000,
             query={'match': {
                         'transcript': {
                             'query': query,
@@ -286,10 +286,9 @@ class Searcher:
 
         return resp['hits']['hits'][0]['_source']
 
-    def do_search(self, query, minutes, weighted=False):
+    def do_search(self, query, weighted=False):
         self.pointer = 0
         self.current_sections = []
-
         if weighted:
             episode_id_score = self.episodes_from_query(query)
             sections = self.sections_from_episodes_query(episode_id_score, query)
@@ -300,59 +299,6 @@ class Searcher:
 
         self.set_current_sections(sections)
 
-    def section_for_frontend(self, query, minutes, weighted=False):
-        start = time.time()
-        sections = []
-
-        if weighted:
-            episode_id_score = self.episodes_from_query(query)
-            #sections = self.sections_from_episodes(episode_id_score, query)
-            sections = self.sections_from_episodes_query(episode_id_score, query)
-
-            sections = self.rank_sections_weighted(sections, episode_id_score)
-        else:
-            sections = self.sections_from_query(query)
-            sections = self.rank_sections_only(sections)
-            """
-            episode_id_score = self.episodes_from_query(query)
-            sections, sections_map = self.sections_from_episodes(episode_id_score, query)
-            sections = self.rank_sections_only(sections)
-            """
-
-
-        before_stuff_time = time.time() - start
-        print('before stuff time ', before_stuff_time)
-
-        res = []
-        transcript_time = 0
-        metadata_time = 0
-        
-        metadatas = {}
-        for section in sections:
-            transcript_time_start = time.time()
-            # query to get previus and next sections to get entire span of transcripts
-            transcript = self.get_section_span(int(section['_id']), section['_source']['episode_id'], minutes)
-            transcript_time += time.time() - transcript_time_start
-
-            loop_start = time.time()
-            # this is to speedup the process of getting metadata
-            if section['_source']['episode_id'] not in metadatas:
-                metadatas[section['_source']['episode_id']] = self.metadata_from_episode(section['_source']['episode_id'])
-
-            metadata = metadatas[section['_source']['episode_id']]
-            metadata_time += time.time() - loop_start
-            res.append({
-                'show': metadata['show_name'],
-                'episode': metadata['episode_name'],
-                'start_time': section['_source']['start_time'],
-                'transcript': transcript,
-                '_score': section['_score'],
-            })
-        
-        print('transcript time:', transcript_time)
-        print('metadatat time:', metadata_time)
-        print('Time taken:', time.time() - start)
-        return res
 
 if __name__ == '__main__':
 

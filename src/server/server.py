@@ -6,10 +6,15 @@ import re, time
 
 app = Flask(__name__, static_url_path="", static_folder="static", template_folder="templates")
 searcher = Searcher()
+all_results = []
 
 #es = Elasticsearch()
 def find_occurrences(text, query):
-    return [match.span() for match in re.finditer(query, text, re.IGNORECASE)] 
+    words = query.split()  # Splits the query into individual words
+    indices = []
+    for word in words:
+        indices.extend([match.span() for match in re.finditer(r'\b' + re.escape(word) + r'\b', text, re.IGNORECASE)])
+    return indices
 
  
 def convert_seconds_to_hms(time_str):
@@ -42,21 +47,21 @@ def get_next_from_searcher(data):
             #"endTime": convert_seconds_to_hms(hit['end_time']),
             "indices": indices
         }
-        results.append(result)
+        all_results.append(result)
 
-    return jsonify({"hits": results, 'numHits': response['num_hits']})
+    return jsonify({"hits": all_results, 'numHits': response['num_hits']})
 
 
 @app.route('/search', methods=['POST'])
 def search():
-    
+    all_results.clear()
     #response = es.search(index="your_index_name", body={"query": {"match": {"content": query}}})
     # Process results to include necessary data
     data = request.get_json()  # assuming JSON data
     query = data.get('query', '')  # default to empty string if not provided
     weighted = data.get('weighted', True) == 'True'
 
-    searcher.do_search(query, weighted)
+    searcher.do_search(query, weighted=weighted)
     # response = searcher.section_for_frontend(query, int(minutes), weighted)
     return get_next_from_searcher(data)
 
