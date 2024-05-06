@@ -12,7 +12,7 @@ The project is built upon Elasticsearch as the search engine to construct the in
 
 1. Install Python 3.11.5
 2. Set up venv with `python -m venv .venv`
-3. Use new venv with `source path/to/.venv`
+3. Use new venv with `source .venv/bin/activate`
 4. Install from requirements with `pip install -r requirements.txt`
 
 ### Set up Elastic search
@@ -26,10 +26,19 @@ The project is built upon Elasticsearch as the search engine to construct the in
 
 ### How to index
 
-1. Update `index.py` with correct path to `path/to/dataset`
-2. Run elastic search
-3. Start indexing `python indexer.py`
+#### Index podcasts
+1. In `indexer.py`, make sure the `paths` array in the main function has the correct podcast path
+2. Start elastic as described above
+3. Make sure you have the correct `ELASTIC_PW` and `ELASTIC_SSL` in your envs
+3. Start indexing with `python indexer.py`
+
+#### Index metadata
+1. In `indexMetadata.py`, make sure the `paths` array in the main function has the correct podcast path
+2. Start elastic as described above
+3. Make sure you have the correct `ELASTIC_PW` and `ELASTIC_SSL` in your envs
+3. Start indexing with `python indexer.py`
 
 ### Run the app
 
-1. Run app `python frontend.py`
+1. Start the server with `python src/server/server.py`
+2. Open your browser at `http://localhost:9090`

@@ -205,77 +205,6 @@ class Searcher:
             })
 
         return '\n'.join(map(lambda x: x['_source']['transcript'], resp['hits']['hits']))
-    
-    def concatenate_with_sections(self, section_id, episode_id, n_minutes):
-        section_id = int(section_id)
-        sections = self.get_section_span(section_id, episode_id, n_minutes)
-
-        section_index = self.index_of_section(section_id, sections) 
-        if section_index < 0:
-            raise ValueError('Section not found in sections')
-        
-        n_sections = n_minutes * 2
-        #start_index = section_index - (n_sections // 2 - 1)
-        start_index = section_index - n_sections // 2
-        #end_index = section_index + (n_sections // 2)
-        end_index = section_index + n_sections // 2
-
-        # if there isnt enough space backwards in the episode
-        if start_index < 0:
-            end_index -= start_index
-            start_index = section_index
-        
-        if end_index > len(sections) - 1:
-            start_index -= end_index - (len(sections) - 1)
-            end_index = len(sections) - 1
-        
-        transcript = ''
-
-        for section in sections[start_index:end_index]:
-            transcript += section['_source']['transcript'] + '\n'
-
-        return transcript
-
-    def concatenate_until_time(self, section_id_org: int, episode_id, n_minute, sections):
-
-        desired_length = n_minute * 60
-        total_time = 0 
-        transcript = ''
-        section_id = section_id_org
-        iteration = 0
-
-        # TOTAL_INDEX_SIZE = 8429540 #total
-        TOTAL_INDEX_SIZE = 124500 #test
-        
-        while (total_time < desired_length):
-            
-            if iteration == 0:
-                offset = 0
-            elif iteration % 2 == 1:
-                offset = -(iteration // 2 + 1)
-            else:
-                offset = iteration // 2
-                
-            section_id = section_id_org + offset
-            section = self.get_section_by_id(section_id) 
-            
-        
-            if section_id <= 0 or section_id >= TOTAL_INDEX_SIZE or section['episode_id'] != episode_id:
-                return transcript
-            
-            start = section['start_time']
-            end = section['end_time']
-
-            total_time += float(end) - float(start)  
-
-            if section_id < section_id_org:
-                transcript = section['transcript'] + '\n' + transcript 
-            else:
-                transcript += '\n' + section['transcript']
-            
-            iteration += 1
-        
-        return transcript
 
     def metadata_from_episode(self, episode_id):
         resp = self.es.search(
@@ -303,13 +232,11 @@ class Searcher:
 if __name__ == '__main__':
 
     searcher = Searcher()
-    # s = ' backflip. We rock papr scissors'
     s = ' backflip. We rock paper scissors'
-    # s = 'hey'
 
     start = time.time()
 
-    searcher.do_search(s, 2, weighted=True)
+    searcher.do_search(s, weighted=True)
     sections = searcher.get_next_sections_for_frontend(5, 2)
     for section in sections['hits']:
         print('-----------------------------------------------------')

@@ -52,9 +52,9 @@ if __name__ == "__main__":
 
     es = Elasticsearch(
         'https://localhost:9200',
-        basic_auth=['elastic', pw],
+        basic_auth=['elastic', str(pw)],
         ssl_assert_fingerprint=(
-            ssl
+            str(ssl)
         )
     )
 
