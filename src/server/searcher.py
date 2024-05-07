@@ -62,11 +62,9 @@ class Searcher:
             query= {'match': {
                         'transcript': {
                             'query': query,
-                            # 'fuzziness': 'AUTO',
                             'operator': 'or',
                         }
                     }},
-            # query={'match_phrase': {'transcript': query}},
         )
 
         episodes = map(lambda x: {'id': x['_source']['episode_id'], 'score': x['_score']}, resp['hits']['hits'])
@@ -85,7 +83,6 @@ class Searcher:
                         {'match': {
                             'transcript': {
                                 'query': query,
-                                # 'fuzziness': 'AUTO',
                                 'operator': 'or',
                             }
                         }},
@@ -128,7 +125,6 @@ class Searcher:
                         {'match': {
                             'transcript': {
                                 'query': query,
-                                # 'fuzziness': 'AUTO',
                                 'operator': 'or',
                             }
                         }},
@@ -150,7 +146,6 @@ class Searcher:
             query={'match': {
                         'transcript': {
                             'query': query,
-                            # 'fuzziness': 'AUTO',
                             'operator': 'or',
                         }
                     }})
@@ -230,7 +225,6 @@ class Searcher:
 
 
 if __name__ == '__main__':
-
     searcher = Searcher()
     s = ' backflip. We rock paper scissors'
 

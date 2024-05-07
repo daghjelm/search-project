@@ -1,0 +1,20 @@
+section ID: {
+      'transcript': transcript of the section
+      'start_time': section start time in the episode
+      'end_time': section end time in the episode
+      'episode_id'   : episode ID
+      'show_id'      : show ID
+}
+
+            '_id': item_id,
+            '_source': {
+                'transcript': transcript,
+                'show_id'      : show,
+                'episode_id'   : episode
+            }})
+
+ID: {
+  'transcript': entire episode transcript,
+  'show_id': show ID,
+  'episode_id': episode ID
+}
